@@ -66,8 +66,12 @@ function renderResults(results) {
 
     // Header
     const thName = document.createElement('th');
-    thName.textContent = '학생 성명/식별';
+    thName.textContent = '학생 정보';
     resultTableHead.appendChild(thName);
+
+    const thContent = document.createElement('th');
+    thContent.textContent = '입력 내용';
+    resultTableHead.appendChild(thContent);
 
     const thStatus = document.createElement('th');
     thStatus.textContent = '점검 결과';
@@ -86,6 +90,17 @@ function renderResults(results) {
         tdName.textContent = res.studentName;
         tr.appendChild(tdName);
 
+        // Content
+        const tdContent = document.createElement('td');
+        // 긴 내용은 적당히 자르거나 그대로 표시 (CSS로 제어)
+        tdContent.textContent = res.cellText; 
+        tdContent.style.maxWidth = "400px";
+        tdContent.style.overflow = "hidden";
+        tdContent.style.textOverflow = "ellipsis";
+        tdContent.style.whiteSpace = "nowrap";
+        tdContent.title = res.cellText; // 마우스 오버 시 전체 내용 표시
+        tr.appendChild(tdContent);
+
         // Status
         const tdStatus = document.createElement('td');
         if (res.errors.length === 0) {
@@ -102,7 +117,7 @@ function renderResults(results) {
             let detailsHtml = '';
             
             res.errors.forEach(err => {
-                let html = `<div><strong>[${err.column}]</strong> `;
+                let html = `<div>`;
                 if (err.foundKeywords.length > 0) {
                     html += `유의어: <span class="highlight-error">${err.foundKeywords.join(', ')}</span> `;
                 }

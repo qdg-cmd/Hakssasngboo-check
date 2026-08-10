@@ -64,33 +64,62 @@ function checkData() {
     }
 
     currentExcelData.forEach((row, rowIndex) => {
-        // 데이터가 충분히 긴지 확인
-        if (!row || row.length <= Math.max(nameColIdx, contentColIdx)) return;
+        if (!row || row.length === 0) return;
         
-        let studentName = (row[nameColIdx] || "").toString().trim();
-        const cellText = (row[contentColIdx] || "").toString();
+        let studentNum = "";
+        let studentName = "";
+        let extraInfo = ""; // 창체: 영역, 단일과목: 학년
+        let cellText = "";
 
-        // 단일과목의 경우 학년과 반/번호를 성명 앞에 붙여서 식별하기 쉽게 만들기
-        if (tabType === 'subject-single' && studentName && studentName !== "성명" && studentName !== "이름") {
-            const grade = (row[2] || "").toString().trim();
-            const classNum = (row[6] || "").toString().trim();
-            if (grade || classNum) {
-                studentName = `[${grade}학년 ${classNum}] ${studentName}`;
-            }
+        if (tabType === 'behavior') {
+            studentNum = (row[0] || "").toString().trim();
+            studentName = (row[1] || "").toString().trim();
+            cellText = (row[3] || "").toString();
+        } else if (tabType === 'subject') {
+            studentNum = (row[0] || "").toString().trim();
+            studentName = (row[1] || "").toString().trim();
+            cellText = (row[2] || "").toString();
+        } else if (tabType === 'creative') {
+            studentNum = (row[0] || "").toString().trim();
+            studentName = (row[1] || "").toString().trim();
+            extraInfo = (row[2] || "").toString().trim(); // 영역
+            cellText = (row[5] || "").toString();
+        } else if (tabType === 'subject-single') {
+            studentNum = (row[6] || "").toString().trim(); // 반/번호
+            studentName = (row[7] || "").toString().trim();
+            extraInfo = (row[2] || "").toString().trim(); // 학년
+            cellText = (row[9] || "").toString();
         }
 
-        // 이름이 없거나, 내용이 없거나, '성명' 같은 헤더 행이면 건너뛰기
-        if (!studentName || !cellText || studentName === "성명" || studentName === "이름") {
-            return;
+        // 헤더 행 등 쓸데없는 데이터 걸러내기
+        const isJunk = !studentName || 
+                       studentName === "성명" || studentName === "이름" || studentName === "학생명" ||
+                       studentNum === "번호" || studentNum === "학번" || studentNum === "순번";
+        if (isJunk || !cellText) return;
+
+        // 화면 및 엑셀에 예쁘게 표시할 식별 정보 만들기
+        let displayId = "";
+        if (tabType === 'subject-single') {
+            displayId = `[${extraInfo}학년 ${studentNum}] ${studentName}`;
+        } else {
+            displayId = studentNum ? `[${studentNum}번] ${studentName}` : studentName;
+            if (tabType === 'creative' && extraInfo) {
+                displayId += ` (${extraInfo})`;
+            }
         }
         
         let hasErrorInRow = false;
+        
+        // 엑셀 내보내기 시 깔끔하게 보일 원본 데이터 재구성
+        let originalData = {
+            "식별/이름": displayId,
+            "입력 내용": cellText
+        };
+
         let rowResult = {
-            studentName: studentName,
-            originalData: {
-                "학생 성명": studentName,
-                "검사 내용": cellText
-            },
+            studentName: displayId,
+            cellText: cellText,
+            originalData: originalData,
             errors: []
         };
         
@@ -121,8 +150,6 @@ function checkData() {
         
         if (foundKeywords.length > 0 || spaceMsgs.length > 0) {
             rowResult.errors.push({
-                column: "내용",
-                text: cellText,
                 foundKeywords: Array.from(new Set(foundKeywords)),
                 spaceErrors: spaceMsgs
             });
