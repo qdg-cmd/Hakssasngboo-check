@@ -135,6 +135,20 @@ body {
     margin-bottom: 2rem;
 }
 
+.path-info {
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 1.5rem;
+    color: #0d47a1;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.path-info strong {
+    margin-right: 4px;
+}
+
 .upload-zone:hover, .upload-zone.dragover {
     border-color: var(--primary-color);
     background-color: #f8f9fa;
@@ -199,6 +213,23 @@ tr:last-child td {
     border-radius: 2px;
     padding: 0 2px;
     font-weight: 600;
+}
+
+.highlight-keyword {
+    background-color: #ffc107;
+    text-decoration: underline;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.highlight-space {
+    background-color: #f44336;
+    color: white;
+    font-weight: bold;
+    padding: 0 4px;
+    border-radius: 2px;
+    margin: 0 2px;
 }
 
 .status-ok {
@@ -381,15 +412,25 @@ textarea:focus, input[type="text"]:focus {
     }
     table {
         border: 1px solid #000;
+        table-layout: auto;
     }
     th, td {
         border: 1px solid #000;
         padding: 0.5rem;
         font-size: 10pt;
     }
-    .highlight-error {
-        background-color: transparent;
-        font-weight: bold;
-        text-decoration: underline;
+    /* Hide Status and Details columns in print (Assuming they are the 3rd and 4th columns) */
+    th:nth-child(3), td:nth-child(3),
+    th:nth-child(4), td:nth-child(4) {
+        display: none !important;
+    }
+    .highlight-keyword {
+        background-color: transparent !important;
+        border-bottom: 2px solid black;
+    }
+    .highlight-space {
+        background-color: #eee !important;
+        color: black !important;
+        border: 1px dotted black;
     }
 }

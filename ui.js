@@ -11,20 +11,55 @@ const btnUploadCsv = document.getElementById('btn-upload-csv');
 const csvUploadInput = document.getElementById('csv-upload-input');
 const btnDownloadCsv = document.getElementById('btn-download-csv');
 
+// UI Event Listeners and DOM Manipulation
+
+const tabBtns = document.querySelectorAll('.tab-btn');
+const uploadBtn = document.getElementById('upload-btn');
+const fileInput = document.getElementById('file-input');
+const dropZone = document.getElementById('upload-zone') || document.getElementById('drop-zone'); // fallback id
+const resultArea = document.getElementById('result-area');
+const resultTableBody = document.getElementById('result-table-body');
+const resultTableHead = document.getElementById('result-table-head');
+const printBtn = document.getElementById('print-btn');
+const exportBtn = document.getElementById('export-btn');
+
 // Upload Elements
 const uploadZone = document.getElementById('upload-zone');
 const excelFileInput = document.getElementById('excel-file-input');
 const spinner = document.getElementById('loading-spinner');
-
-// Result Elements
-const resultArea = document.getElementById('result-area');
-const resultTableHead = document.getElementById('result-table-head');
-const resultTableBody = document.getElementById('result-table-body');
 const btnExportExcel = document.getElementById('btn-export-excel');
 const btnPrint = document.getElementById('btn-print');
 
-// Tabs
-const tabBtns = document.querySelectorAll('.tab-btn');
+const NEIS_PATHS = {
+    'behavior': "[나이스] - [학급담임] - [학교생활기록부] - [학생부 전체 반영] - (학생부 항목별 조회) - '행발(현재학년) XLS Data로 저장'",
+    'creative': "[나이스] - [학급담임] - [학교생활기록부] - [학생부 전체 반영] - (학생부 항목별 조회) - '창체(활동별) XLS Data로 저장'",
+    'subject': "[나이스] - [학급담임] - [학교생활기록부] - [학생부 전체 반영] - (학생부 항목별 조회) - '세부능력및특기사항(현재학년) XLS Data로 저장'",
+    'subject-single': "[나이스] - [교과담임] - [성적] - [성적처리] - [과목별세부능력및특기사항] - (조회 후 엑셀 내려받기)"
+};
+
+function updatePathInfo(type) {
+    const pathText = document.getElementById('path-text');
+    if (pathText && NEIS_PATHS[type]) {
+        pathText.textContent = NEIS_PATHS[type];
+    }
+}
+
+// Tabs logic
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updatePathInfo(btn.dataset.type);
+    });
+});
+
+// Initialize path text
+document.addEventListener('DOMContentLoaded', () => {
+    const activeBtn = document.querySelector('.tab-btn.active');
+    if (activeBtn) {
+        updatePathInfo(activeBtn.dataset.type);
+    }
+});
 
 function showModal(modal) {
     modal.classList.remove('hidden');
@@ -92,13 +127,40 @@ function renderResults(results) {
 
         // Content
         const tdContent = document.createElement('td');
-        // 긴 내용은 적당히 자르거나 그대로 표시 (CSS로 제어)
-        tdContent.textContent = res.cellText; 
-        tdContent.style.maxWidth = "400px";
-        tdContent.style.overflow = "hidden";
-        tdContent.style.textOverflow = "ellipsis";
-        tdContent.style.whiteSpace = "nowrap";
-        tdContent.title = res.cellText; // 마우스 오버 시 전체 내용 표시
+        
+        let highlightedText = res.cellText;
+        
+        // 하이라이트 적용 (에러가 있는 경우)
+        if (res.errors && res.errors.length > 0) {
+            // 이스케이프 함수
+            const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            
+            res.errors.forEach(err => {
+                // 단어 하이라이트
+                if (err.foundKeywords && err.foundKeywords.length > 0) {
+                    err.foundKeywords.forEach(kw => {
+                        const regex = new RegExp(escapeRegExp(kw), 'g');
+                        highlightedText = highlightedText.replace(regex, `<span class="highlight-keyword">${kw}</span>`);
+                    });
+                }
+                
+                // 공백 하이라이트 (연속, 시작, 끝)
+                if (err.spaceErrors && err.spaceErrors.length > 0) {
+                    highlightedText = highlightedText.replace(/\s{2,}/g, `<span class="highlight-space">␣␣</span>`);
+                    if (err.spaceErrors.includes("시작 공백")) {
+                        highlightedText = highlightedText.replace(/^\s+/, `<span class="highlight-space">␣</span>`);
+                    }
+                    if (err.spaceErrors.includes("끝 공백")) {
+                        highlightedText = highlightedText.replace(/\s+$/, `<span class="highlight-space">␣</span>`);
+                    }
+                }
+            });
+        }
+        
+        // 내용을 모두 표시하도록 설정 (기존의 자르기 로직 제거)
+        tdContent.innerHTML = highlightedText;
+        tdContent.style.whiteSpace = "pre-wrap"; // 줄바꿈과 공백 유지
+        tdContent.style.minWidth = "300px";
         tr.appendChild(tdContent);
 
         // Status
