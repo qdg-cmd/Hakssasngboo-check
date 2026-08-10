@@ -435,6 +435,71 @@ textarea:focus, input[type="text"]:focus {
     padding: 3rem;
 }
 
+/* AI Settings and UI */
+.settings-group {
+    margin-bottom: 1.5rem;
+}
+.settings-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: 'Pretendard', sans-serif;
+    box-sizing: border-box;
+}
+.help-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+.help-text a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+.help-text a:hover {
+    text-decoration: underline;
+}
+.btn-ai-review {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #f3f0ff;
+    color: #673ab7;
+    border: 1px solid #d1c4e9;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.btn-ai-review:hover {
+    background-color: #e8eaf6;
+}
+.ai-feedback-container {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-left: 3px solid #673ab7;
+    font-size: 0.9rem;
+}
+.ai-feedback-title {
+    font-weight: 700;
+    color: #673ab7;
+    margin-bottom: 5px;
+}
+.ai-highlight {
+    background-color: rgba(255, 235, 59, 0.5); /* Yellow background with opacity */
+    border-bottom: 2px dashed #f44336; /* Red dashed underline */
+    font-weight: bold;
+}
+
 /* Print Styles */
 @media print {
     body {

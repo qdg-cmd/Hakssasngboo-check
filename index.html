@@ -21,6 +21,8 @@
         <header class="top-header">
             <h1>학생부 기재유의어 점검기</h1>
             <div class="header-actions">
+                <button id="btn-manual" class="btn btn-outline">📖 사용 설명서</button>
+                <button id="btn-ai-settings" class="btn btn-outline">⚙️ AI 설정</button>
                 <button id="btn-keyword-manage" class="btn btn-primary">기재유의어 관리</button>
             </div>
         </header>
@@ -115,9 +117,69 @@
         </div>
     </div>
 
+    <!-- 모달: AI 설정 -->
+    <div id="modal-ai-settings" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ AI 교정 설정</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <label for="ai-model-select">AI 모델 선택</label>
+                    <select id="ai-model-select" class="form-control">
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (기본, 빠름)</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (고성능, 정밀함)</option>
+                    </select>
+                    <p class="help-text">Flash는 일상적인 빠른 검토에, Pro는 심도 깊은 문맥 파악에 적합합니다.</p>
+                </div>
+                <div class="settings-group">
+                    <label for="ai-api-key">Gemini API 키 입력</label>
+                    <input type="password" id="ai-api-key" class="form-control" placeholder="AIzaSy...">
+                    <p class="help-text">
+                        API 키는 이 컴퓨터(브라우저)에만 안전하게 저장되며 서버로 전송되지 않습니다.<br>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">👉 API 키 발급받기 (Google AI Studio)</a>
+                    </p>
+                </div>
+                <div class="settings-actions">
+                    <button id="btn-save-ai-settings" class="btn btn-primary" style="width: 100%;">저장하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달: 사용 설명서 -->
+    <div id="modal-manual" class="modal hidden">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>📖 사용 설명서</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="line-height: 1.6;">
+                <h3>📌 기본 사용법</h3>
+                <ol>
+                    <li>상단 탭에서 점검하고자 하는 항목(행발, 창체, 교과세특 등)을 선택합니다.</li>
+                    <li>안내된 나이스 다운로드 경로를 참고하여 엑셀(.xls) 파일을 다운로드합니다.</li>
+                    <li>다운로드한 엑셀 파일을 화면 가운데 점선 영역으로 드래그하거나 클릭하여 업로드합니다.</li>
+                    <li>문제가 발견된 학생은 자동으로 붉은색 배경과 함께 강조 표시됩니다.</li>
+                </ol>
+                <hr>
+                <h3>✨ AI 정밀 검토 사용법 (고급)</h3>
+                <p>Gemini AI를 연결하여 기재유의어뿐만 아니라 문맥상 기재가 부적절한 내용을 짚어내고, 더 나은 교정 방향을 추천받을 수 있습니다.</p>
+                <ol>
+                    <li>우측 상단의 <strong>[⚙️ AI 설정]</strong> 버튼을 누릅니다.</li>
+                    <li>안내된 링크(Google AI Studio)로 이동하여 무료 API 키를 발급받아 복사합니다.</li>
+                    <li>설정 창에 키를 붙여넣고 저장합니다.</li>
+                    <li>파일을 업로드한 뒤, 원하는 학생의 '상세 내용' 칸에 있는 <strong>[✨ AI 정밀 검토]</strong> 버튼을 누르면 AI가 문맥을 분석하여 즉시 피드백을 제공합니다.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
     <script src="firebase_setup.js"></script>
     <script src="keyword_manager.js"></script>
     <script src="checker.js"></script>
+    <script src="ai_reviewer.js"></script>
     <script src="export.js"></script>
     <script src="ui.js"></script>
     <script src="app.js"></script>
