@@ -265,64 +265,74 @@ function renderResults(results) {
         
         const aiReviewBtn = document.createElement('button');
         aiReviewBtn.className = 'btn-ai-review';
-        aiReviewBtn.innerHTML = '✨ AI 정밀 검토';
         
         const aiFeedbackContainer = document.createElement('div');
         aiFeedbackContainer.className = 'ai-feedback-container hidden';
         
-        aiReviewBtn.addEventListener('click', () => {
-            if (aiReviewBtn.disabled) return;
-            
-            // 기존 AI 리뷰가 있다면 지우고 닫기/열기 토글 대신 재실행 (또는 캐싱. 여기선 재실행/열기)
-            aiReviewBtn.disabled = true;
-            const originalText = aiReviewBtn.innerHTML;
-            aiReviewBtn.innerHTML = '⏳ 검토 중...';
-            
-            reviewWithAI(res.originalData["입력 내용"], (result) => {
-                aiReviewBtn.innerHTML = originalText;
-                aiReviewBtn.disabled = false;
-                
-                if (result.error) {
-                    alert(result.error);
-                    return;
-                }
-                
-                // 성공 시 화면 반영
-                const aiData = result.data;
-                
-                // 1. 상세 내용 업데이트
-                aiFeedbackContainer.classList.remove('hidden');
-                aiFeedbackContainer.innerHTML = `
-                    <div class="ai-feedback-title">기재 금지 사항 검토 결과</div>
-                    <div style="margin-bottom:8px;">${aiData.inspection_result.replace(/\n/g, '<br>')}</div>
-                    <div class="ai-feedback-title">서술 개선 피드백</div>
-                    <div>${aiData.feedback.replace(/\n/g, '<br>')}</div>
-                `;
-                
-                // 2. 입력 내용 텍스트 하이라이트 업데이트
-                if (aiData.problematic_phrases && aiData.problematic_phrases.length > 0) {
-                    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    
-                    aiData.problematic_phrases.forEach(phrase => {
-                        if (!phrase) return;
-                        const regex = new RegExp(escapeRegExp(phrase), 'g');
-                        // tdContent.innerHTML에서 직접 치환 (기존 하이라이트가 깨질 수 있으므로 조심스럽게 접근)
-                        // 단순화를 위해 현재 innerHTML에서 정규식 치환
-                        tdContent.innerHTML = tdContent.innerHTML.replace(regex, `<span class="ai-highlight">${phrase}</span>`);
-                    });
-                }
-                
-                // AI 리뷰가 진행되었음을 표시
-                tr.classList.add('row-error'); // AI가 문제를 찾았든 아니든 일단 강조 (혹은 필요에 따라 변경)
-                tr.style.display = ''; // 필터링에 의해 숨겨져있었다면 보이게 함
-                
-                // 만약 기존 상태가 '이상 없음'이었다면 '확인 필요'로 상태 변경
-                const statusTd = tr.querySelector('td:nth-child(3)');
-                if (statusTd && statusTd.textContent.includes('이상 없음')) {
-                    statusTd.innerHTML = '<span class="status-warn">⚠️ AI 검토 완료</span>';
-                }
+        const currentSettings = typeof getAiSettings === 'function' ? getAiSettings() : { apiKey: '' };
+        
+        if (!currentSettings.apiKey) {
+            // API 키가 없을 때의 동작
+            aiReviewBtn.innerHTML = '🔑 API 키 설정 필요';
+            aiReviewBtn.style.backgroundColor = '#fff0f0';
+            aiReviewBtn.style.color = '#d32f2f';
+            aiReviewBtn.style.borderColor = '#ffcdd2';
+            aiReviewBtn.addEventListener('click', () => {
+                if (btnAiSettings) btnAiSettings.click(); // 설정 모달 열기
             });
-        });
+        } else {
+            // API 키가 있을 때의 정상 동작
+            aiReviewBtn.innerHTML = '✨ AI 정밀 검토';
+            aiReviewBtn.addEventListener('click', () => {
+                if (aiReviewBtn.disabled) return;
+                
+                aiReviewBtn.disabled = true;
+                const originalText = aiReviewBtn.innerHTML;
+                aiReviewBtn.innerHTML = '⏳ 검토 중...';
+                
+                reviewWithAI(res.originalData["입력 내용"], (result) => {
+                    aiReviewBtn.innerHTML = originalText;
+                    aiReviewBtn.disabled = false;
+                    
+                    if (result.error) {
+                        alert(result.error);
+                        return;
+                    }
+                    
+                    // 성공 시 화면 반영
+                    const aiData = result.data;
+                    
+                    // 1. 상세 내용 업데이트
+                    aiFeedbackContainer.classList.remove('hidden');
+                    aiFeedbackContainer.innerHTML = `
+                        <div class="ai-feedback-title">기재 금지 사항 검토 결과</div>
+                        <div style="margin-bottom:8px;">${aiData.inspection_result.replace(/\n/g, '<br>')}</div>
+                        <div class="ai-feedback-title">서술 개선 피드백</div>
+                        <div>${aiData.feedback.replace(/\n/g, '<br>')}</div>
+                    `;
+                    
+                    // 2. 입력 내용 텍스트 하이라이트 업데이트
+                    if (aiData.problematic_phrases && aiData.problematic_phrases.length > 0) {
+                        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        
+                        aiData.problematic_phrases.forEach(phrase => {
+                            if (!phrase) return;
+                            const regex = new RegExp(escapeRegExp(phrase), 'g');
+                            tdContent.innerHTML = tdContent.innerHTML.replace(regex, `<span class="ai-highlight">${phrase}</span>`);
+                        });
+                    }
+                    
+                    // AI 리뷰가 진행되었음을 표시
+                    tr.classList.add('row-error'); 
+                    tr.style.display = '';
+                    
+                    const statusTd = tr.querySelector('td:nth-child(3)');
+                    if (statusTd && statusTd.textContent.includes('이상 없음')) {
+                        statusTd.innerHTML = '<span class="status-warn">⚠️ AI 검토 완료</span>';
+                    }
+                });
+            });
+        }
         
         tdDetailsToAppend.appendChild(document.createElement('br'));
         tdDetailsToAppend.appendChild(aiReviewBtn);
