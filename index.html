@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생부 기재유의어 점검기</title>
+    <!-- 폰트 적용 (Pretendard) -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- SheetJS (엑셀 처리) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- Firebase SDK (v8 모듈) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 헤더 및 상단 메뉴 -->
+        <header class="top-header">
+            <h1>학생부 기재유의어 점검기</h1>
+            <div class="header-actions">
+                <button id="btn-keyword-manage" class="btn btn-primary">기재유의어 관리</button>
+            </div>
+        </header>
+
+        <!-- 탭 네비게이션 -->
+        <div class="tabs">
+            <button class="tab-btn active" data-type="behavior">행동 및 학습발달</button>
+            <button class="tab-btn" data-type="creative">창의적 체험활동</button>
+            <button class="tab-btn" data-type="subject">교과 세부능력 및 특기사항</button>
+        </div>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="main-content">
+            <!-- 엑셀 업로드 영역 -->
+            <div id="upload-zone" class="upload-zone">
+                <div class="upload-icon">📄</div>
+                <p>여기로 엑셀 파일을 드래그하거나 클릭하여 업로드하세요</p>
+                <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" hidden>
+            </div>
+
+            <!-- 로딩 표시기 -->
+            <div id="loading-spinner" class="hidden">
+                <div class="spinner"></div>
+                <p>파일을 분석하고 있습니다...</p>
+            </div>
+
+            <!-- 결과 표시 영역 -->
+            <div id="result-area" class="result-area hidden">
+                <div class="result-header">
+                    <h2>점검 결과</h2>
+                    <div class="result-actions">
+                        <button id="btn-export-excel" class="btn btn-outline">엑셀 내보내기</button>
+                        <button id="btn-print" class="btn btn-outline">인쇄 / PDF 저장</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="result-table">
+                        <thead>
+                            <tr id="result-table-head">
+                                <!-- 헤더는 JS에서 동적 생성 -->
+                            </tr>
+                        </thead>
+                        <tbody id="result-table-body">
+                            <!-- 내용은 JS에서 동적 생성 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+
+    <!-- 모달: 기재유의어 관리 -->
+    <div id="modal-keywords" class="modal hidden">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>기재유의어 관리</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="keyword-actions">
+                    <div class="input-group">
+                        <input type="text" id="new-keyword-input" placeholder="새로운 금지어 입력">
+                        <button id="btn-add-keyword" class="btn btn-primary">추가</button>
+                    </div>
+                    <div class="csv-actions">
+                        <input type="file" id="csv-upload-input" accept=".csv" hidden>
+                        <button id="btn-upload-csv" class="btn btn-outline">CSV 일괄 업로드</button>
+                        <button id="btn-download-csv" class="btn btn-text">양식 다운로드</button>
+                    </div>
+                </div>
+                <div class="keyword-list-container">
+                    <ul id="keyword-list" class="keyword-list">
+                        <!-- 키워드 목록 렌더링 -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase_setup.js"></script>
+    <script src="keyword_manager.js"></script>
+    <script src="checker.js"></script>
+    <script src="export.js"></script>
+    <script src="ui.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
