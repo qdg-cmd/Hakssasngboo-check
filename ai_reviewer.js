@@ -27,7 +27,7 @@ const SYSTEM_PROMPT = `
 function getAiSettings() {
     return {
         apiKey: localStorage.getItem('gemini_api_key') || '',
-        model: localStorage.getItem('gemini_model') || 'gemini-1.5-flash'
+        model: localStorage.getItem('gemini_model') || 'gemini-1.5-flash-latest'
     };
 }
 

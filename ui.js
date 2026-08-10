@@ -115,6 +115,10 @@ if (btnSaveAiSettings) {
             saveAiSettings(key, model);
             alert("AI 설정이 저장되었습니다.");
             hideModal(modalAiSettings);
+            // API 키가 방금 입력되었다면 화면의 버튼 상태(필요 -> 검토)를 업데이트
+            if (window.currentRenderedResults) {
+                renderResults(window.currentRenderedResults);
+            }
         }
     });
 }
@@ -144,6 +148,8 @@ function renderKeywordList(keywords) {
 }
 
 function renderResults(results) {
+    window.currentRenderedResults = results; // 저장을 위해 전역 변수에 할당
+    
     resultTableHead.innerHTML = '';
     resultTableBody.innerHTML = '';
 
