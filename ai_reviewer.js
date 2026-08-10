@@ -44,7 +44,7 @@ async function reviewWithAI(text, callback) {
         return;
     }
 
-    const url = \`\${AI_API_URL_BASE}\${settings.model}:generateContent?key=\${settings.apiKey}\`;
+    const url = `${AI_API_URL_BASE}${settings.model}:generateContent?key=${settings.apiKey}`;
     
     const payload = {
         system_instruction: {
