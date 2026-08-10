@@ -78,12 +78,12 @@ function checkData() {
         } else if (tabType === 'subject') {
             studentNum = (row[0] || "").toString().trim();
             studentName = (row[1] || "").toString().trim();
-            cellText = (row[2] || "").toString();
+            cellText = (row[3] || "").toString(); // D열
         } else if (tabType === 'creative') {
             studentNum = (row[0] || "").toString().trim();
             studentName = (row[1] || "").toString().trim();
-            extraInfo = (row[2] || "").toString().trim(); // 영역
-            cellText = (row[5] || "").toString();
+            extraInfo = (row[3] || "").toString().trim(); // D열 (영역)
+            cellText = (row[5] || "").toString(); // F열
         } else if (tabType === 'subject-single') {
             studentNum = (row[6] || "").toString().trim(); // 반/번호
             studentName = (row[7] || "").toString().trim();
@@ -91,10 +91,12 @@ function checkData() {
             cellText = (row[9] || "").toString();
         }
 
-        // 헤더 행 등 쓸데없는 데이터 걸러내기
+        // 헤더 행 등 쓸데없는 데이터 걸러내기 (번호에 숫자가 포함되어 있어야만 정상적인 데이터로 간주)
+        const hasNumber = /\d/.test(studentNum);
+        
         const isJunk = !studentName || 
                        studentName === "성명" || studentName === "이름" || studentName === "학생명" ||
-                       studentNum === "번호" || studentNum === "학번" || studentNum === "순번";
+                       !hasNumber;
         if (isJunk || !cellText) return;
 
         // 화면 및 엑셀에 예쁘게 표시할 식별 정보 만들기

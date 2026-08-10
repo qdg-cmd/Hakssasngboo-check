@@ -29,6 +29,22 @@ const excelFileInput = document.getElementById('excel-file-input');
 const spinner = document.getElementById('loading-spinner');
 const btnExportExcel = document.getElementById('btn-export-excel');
 const btnPrint = document.getElementById('btn-print');
+const btnFilterError = document.getElementById('btn-filter-error');
+
+let isFilterErrorOnly = false;
+
+if (btnFilterError) {
+    btnFilterError.addEventListener('click', () => {
+        isFilterErrorOnly = !isFilterErrorOnly;
+        if (isFilterErrorOnly) {
+            btnFilterError.textContent = "모두 보기";
+            document.querySelectorAll('.row-normal').forEach(el => el.style.display = 'none');
+        } else {
+            btnFilterError.textContent = "⚠️ 확인 필요만 보기";
+            document.querySelectorAll('.row-normal').forEach(el => el.style.display = '');
+        }
+    });
+}
 
 const NEIS_PATHS = {
     'behavior': "[나이스] - [학급담임] - [학교생활기록부] - [학생부 전체 반영] - (학생부 항목별 조회) - '행발(현재학년) XLS Data로 저장'",
@@ -99,6 +115,14 @@ function renderResults(results) {
 
     if (results.length === 0) return;
 
+    const totalCount = results.length;
+    const errorCount = results.filter(r => r.errors.length > 0).length;
+    
+    const summaryText = document.getElementById('summary-text');
+    if (summaryText) {
+        summaryText.innerHTML = `총 <strong>${totalCount}</strong>명 중 확인 필요 <strong>${errorCount}</strong>명`;
+    }
+
     // Header
     const thName = document.createElement('th');
     thName.textContent = '학생 정보';
@@ -119,6 +143,15 @@ function renderResults(results) {
     // Body
     results.forEach(res => {
         const tr = document.createElement('tr');
+        
+        if (res.errors && res.errors.length > 0) {
+            tr.classList.add('row-error');
+        } else {
+            tr.classList.add('row-normal');
+            if (isFilterErrorOnly) {
+                tr.style.display = 'none';
+            }
+        }
         
         // Name
         const tdName = document.createElement('td');

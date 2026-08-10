@@ -171,11 +171,24 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 10px;
 }
-
 .result-header h2 {
+    margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
+}
+
+.result-summary {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+#summary-text {
+    color: #555;
 }
 
 .table-container {
@@ -193,8 +206,35 @@ table {
 }
 
 th, td {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+/* 지정된 너비를 줘서 테이블이 뭉개지지 않도록 설정 */
+th:nth-child(1), td:nth-child(1) {
+    width: 15%; /* 학생 정보 */
+    min-width: 100px;
+    word-break: keep-all;
+}
+th:nth-child(2), td:nth-child(2) {
+    width: 60%; /* 입력 내용 */
+}
+th:nth-child(3), td:nth-child(3) {
+    width: 10%; /* 점검 결과 */
+    min-width: 80px;
+}
+th:nth-child(4), td:nth-child(4) {
+    width: 15%; /* 상세 내용 */
+    min-width: 100px;
+}
+
+.row-error {
+    background-color: #fff4f4;
+}
+.row-error:hover {
+    background-color: #ffeaea;
 }
 
 th {
@@ -419,9 +459,8 @@ textarea:focus, input[type="text"]:focus {
         padding: 0.5rem;
         font-size: 10pt;
     }
-    /* Hide Status and Details columns in print (Assuming they are the 3rd and 4th columns) */
-    th:nth-child(3), td:nth-child(3),
-    th:nth-child(4), td:nth-child(4) {
+    /* Hide Status column in print, but keep Details column */
+    th:nth-child(3), td:nth-child(3) {
         display: none !important;
     }
     .highlight-keyword {
