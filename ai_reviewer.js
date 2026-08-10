@@ -27,7 +27,7 @@ const SYSTEM_PROMPT = `
 function getAiSettings() {
     return {
         apiKey: localStorage.getItem('gemini_api_key') || '',
-        model: localStorage.getItem('gemini_model') || 'gemini-1.5-flash-latest'
+        model: localStorage.getItem('gemini_model') || 'gemini-1.5-flash'
     };
 }
 
@@ -44,7 +44,12 @@ async function reviewWithAI(text, callback) {
         return;
     }
 
-    const url = `${AI_API_URL_BASE}${settings.model}:generateContent?key=${settings.apiKey}`;
+    let safeModelName = settings.model.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+    // 복구 로직: gemini-1-5-flash-latest -> gemini-1.5-flash-latest 와 같은 변환 처리
+    safeModelName = safeModelName.replace(/gemini-1-5/g, 'gemini-1.5');
+    if (!safeModelName.includes('gemini')) safeModelName = 'gemini-1.5-flash';
+
+    const url = `${AI_API_URL_BASE}${safeModelName}:generateContent?key=${settings.apiKey}`;
     
     const payload = {
         system_instruction: {
