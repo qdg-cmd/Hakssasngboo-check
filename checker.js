@@ -45,6 +45,20 @@ function checkData() {
     let parsedStudents = [];
     let lastValidStudent = null;
 
+    // 전체 파일을 스캔하여 전역 오프셋(열 밀림 현상)을 한 번만 결정
+    let globalOffset = 0;
+    for (let i = 0; i < Math.min(20, currentExcelData.length); i++) {
+        let r = currentExcelData[i];
+        if (!r || r.length === 0) continue;
+        let rowStr = r.join("").replace(/\s/g, '');
+        if (rowStr.includes("성명") || rowStr.includes("이름")) {
+            if (r[0] === undefined || r[0] === null || r[0].toString().trim() === "") {
+                globalOffset = 1;
+            }
+            break;
+        }
+    }
+
     // 1단계: 엑셀 행을 순회하며 학생별로 데이터를 모두 이어붙임 (페이지 잘림, 진로활동 줄바꿈 등 해결)
     currentExcelData.forEach((row) => {
         if (!row || row.length === 0) return;
@@ -55,19 +69,20 @@ function checkData() {
         let cellText = "";
 
         if (tabType === 'behavior') {
-            studentNum = (row[0] || "").toString().trim();
-            studentName = (row[1] || "").toString().trim();
-            cellText = (row[3] || "").toString();
+            studentNum = (row[0 + globalOffset] || "").toString().trim();
+            studentName = (row[1 + globalOffset] || "").toString().trim();
+            cellText = (row[3 + globalOffset] || "").toString();
         } else if (tabType === 'subject') {
-            studentNum = (row[0] || "").toString().trim();
-            studentName = (row[1] || "").toString().trim();
-            cellText = (row[3] || "").toString(); 
+            studentNum = (row[0 + globalOffset] || "").toString().trim();
+            studentName = (row[1 + globalOffset] || "").toString().trim();
+            cellText = (row[3 + globalOffset] || "").toString(); 
         } else if (tabType === 'creative') {
-            studentNum = (row[0] || "").toString().trim();
-            studentName = (row[1] || "").toString().trim();
-            extraInfo = (row[3] || "").toString().trim(); 
-            cellText = (row[5] || "").toString(); 
+            studentNum = (row[0 + globalOffset] || "").toString().trim();
+            studentName = (row[1 + globalOffset] || "").toString().trim();
+            extraInfo = (row[3 + globalOffset] || "").toString().trim(); 
+            cellText = (row[5 + globalOffset] || "").toString(); 
         } else if (tabType === 'subject-single') {
+            // 단일과목은 양식이 복잡하여 고정
             studentNum = (row[6] || "").toString().trim(); 
             studentName = (row[7] || "").toString().trim();
             extraInfo = (row[2] || "").toString().trim(); 
