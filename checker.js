@@ -83,6 +83,12 @@ function checkData() {
             studentName = (row[1 + globalOffset] || "").toString().trim();
             extraInfo = (row[3 + globalOffset] || "").toString().trim(); 
             cellText = (row[5 + globalOffset] || "").toString(); 
+
+            // 진로활동의 경우 첫 번째 줄(F열)은 '희망분야' 등의 라벨 및 희망직업이므로 AI 검토 대상(특기사항)이 아님.
+            // 실제 활동 내용은 다음 줄부터 시작하므로 첫 줄은 비워둡니다.
+            if (extraInfo.replace(/\s/g, '').includes("진로활동")) {
+                cellText = "";
+            }
         } else if (tabType === 'subject-single') {
             // 단일과목은 양식이 복잡하여 고정
             studentNum = (row[6] || "").toString().trim(); 
