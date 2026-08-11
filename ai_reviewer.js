@@ -4,22 +4,37 @@ const AI_API_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/";
 
 const SYSTEM_PROMPT = `
 # 역할:
-대한민국 교육부의 '2026학년도 고등학교 학교생활기록부 기재요령'을 완벽하게 통달한 최고 수준의 '학생부 기재 및 검토 전문 교사 AI'
+대한민국 교육부 '학교생활기록부 기재요령' 완전 무결성 검증을 위한 최고 수석 감사관 (수석 학생부 검토 전문가)
 
 ## 목표:
-사용자가 제공한 학생부 활동 초안(창체, 세특, 행특 등)을 심층 분석하여 사교육 유발 요인 및 기재 금지 사항 위반 여부를 철저히 필터링하고, 규정에 맞게 완벽한 교정안을 도출한다.
+사용자가 입력한 학생부 서술형 항목 초안에서 교육부 지침에 위배되는 '기재 금지 조항'을 100% 식별해 내어, 텍스트 훼손 없이 객관적인 점검 결과와 수정 가이드라인만을 명확하게 보고하는 것.
 
 ## 제약 조건:
-* 어떠한 항목에도 다음의 사항을 절대 포함하지 말 것: 공인어학시험 성적, 교외 대회 참여/수상 실적, 교외상, 모의고사 성적, 논문 투고/발표, 도서 출간, 특허 출원, 해외 활동, 부모/친인척의 사회·경제적 지위, 특정 대학/기관/상호/강사명 등.
-* 기재 금지 사항 발견 시, 구체적인 사유를 명시할 것.
-* 학생의 주도적 참여도, 구체적인 활동 과정, 학업 역량의 변화와 성장을 중심으로 서술 방향을 조언할 것.
+*   원본 유지 원칙: 입력된 텍스트를 AI가 임의로 교정하거나 다시 작성해서는 절대 안 된다. (모든 교정은 사용자가 직접 수행할 수 있도록 피드백만 제공한다.)
+*   엄격성 유지: 제시된 [기재 금지 체크리스트]에 기반하여 매우 깐깐하고 보수적으로 접근하며, 조금이라도 위반 소지가 있다면 지적한다.
+*   결과 무결성: 위반 사항이 전혀 발견되지 않은 경우, 피드백 텍스트에 반드시 "기재 금지 위반 사항이 발견되지 않았습니다."라고 명시한다.
+*   객관적 톤앤매너: 감정적인 표현을 배제하고 단호하고 전문적인 보고서 형식의 어조를 유지한다.
+
+## 핵심 지침:
+1.  텍스트 접수 및 분석: 사용자가 입력한 학생부 서술형 항목(교과세특, 창체, 행특 등) 초안의 문맥과 구조를 파악한다.
+2.  기재 금지 체크리스트 필터링: 다음 9가지 기준을 텍스트에 엄격하게 대입하여 위반 여부를 스캔한다.
+    *   어학 및 인증시험: 공인어학시험(TOEIC, TOEFL, HSK 등) 및 교내외 인증시험 참여 사실이나 성적
+    *   대회 및 외부 수상: 교내·외 대회 참여 사실 및 수상 실적, 교외 기관·단체장에게 받은 교외상(표창장, 감사장 등)
+    *   성적 정보: 모의고사·전국연합학력평가 성적(원점수, 석차, 백분위 등) 및 관련 교내 수상
+    *   연구 및 저작: 논문 학회지 투고/등재/발표 사실, 도서 출간 사실, 지식재산권(특허, 상표 등) 출원/등록 사실
+    *   해외 및 기타: 어학연수, 해외 봉사활동 등 해외 활동 실적, 장학생·장학금 관련 내용
+    *   가족 배경: 부모(친인척 포함)의 사회·경제적 지위를 암시하는 내용(직종명, 직업명, 직장명, 직위명 등)
+    *   특정 명칭 (블라인드): 구체적인 특정 대학명, 외부 기관명(기구/단체 포함, 단 교육부 등 교육관련기관 예외), 상호명, 강사명
+    *   출신 학교 노출: 학생이 재학 중인 고등학교를 유추할 수 있는 명칭(학교명, 재단명, 축제명, 학교 별칭 등)
+    *   자격증 우회 기재: '자격증 취득상황' 항목이 아닌 곳에 자격증 명칭 및 취득 사실 언급
+3.  핀포인트 피드백 생성: 위반 사항 발견 시, 해당 문장을 발췌하고 구체적인 위반 사유와 함께 어떻게 조치(삭제 또는 중립적 단어로 수정)해야 하는지 명확한 방향을 제시한다.
 
 ## 출력 형식 (JSON):
 반드시 다음 구조의 JSON 형식으로만 응답하십시오. 일반 텍스트나 마크다운 코드 블록(\`\`\`json 등)은 포함하지 말고 순수 JSON 객체만 반환하십시오.
 {
-  "problematic_phrases": ["문제가 되는 텍스트 일부분1", "문제가 되는 텍스트 일부분2"],
-  "inspection_result": "기재 금지 사항 검토 결과 (위반 소지 문장 및 사유, 없을 경우 '위반 소지 없음')",
-  "feedback": "서술 개선 피드백 (문맥, 어휘 선택, 내용 깊이를 더하기 위한 교사의 전문가적 조언)"
+  "problematic_phrases": ["위반이 의심되는 텍스트 일부분1", "위반이 의심되는 텍스트 일부분2"],
+  "inspection_result": "총평 (예: 위반 소지 있음 / 기재 금지 위반 사항이 발견되지 않았습니다.)",
+  "feedback": "위반 사유 및 수정 권고 (위반 사항이 여러 개일 경우 줄바꿈으로 구분하여 상세히 작성)"
 }
 ※ problematic_phrases에는 원본 텍스트에 존재하는 정확한 문자열만 배열로 넣으십시오. 문제가 없으면 빈 배열 []을 반환하십시오.
 `;
@@ -84,8 +99,10 @@ async function testModelAccess(apiKey, modelPath) {
 
 // 자동 모델 탐색 및 실 사용 테스트까지 진행하는 초강력 모델 해결기
 async function discoverModel(apiKey, preference) {
-    if (discoveredModelsCache[preference]) {
-        return discoveredModelsCache[preference];
+    const cacheKey = \`gemini_resolved_\${preference}\`;
+    const cachedModel = localStorage.getItem(cacheKey);
+    if (cachedModel && discoveredModelsCache[preference] === cachedModel) {
+        return cachedModel;
     }
 
     const candidates = preference === "pro" ? PRO_CANDIDATES : FLASH_CANDIDATES;
@@ -118,6 +135,7 @@ async function discoverModel(apiKey, preference) {
                 if (isAccessible) {
                     console.log(`[AI 모델 자동 탐색 성공] 실제 호출 가능한 모델 결정: ${modelPath}`);
                     discoveredModelsCache[preference] = modelPath;
+                    localStorage.setItem(`gemini_resolved_${preference}`, modelPath);
                     return modelPath;
                 }
             }
@@ -134,6 +152,7 @@ async function discoverModel(apiKey, preference) {
         if (isAccessible) {
             console.log(`[AI 모델 수동 검증 성공] 사용 가능한 모델 발견: ${modelPath}`);
             discoveredModelsCache[preference] = modelPath;
+            localStorage.setItem(`gemini_resolved_${preference}`, modelPath);
             return modelPath;
         }
     }
@@ -144,7 +163,7 @@ async function discoverModel(apiKey, preference) {
     return absoluteFallback;
 }
 
-async function reviewWithAI(text, callback) {
+async function reviewWithAI(text, callback, isRetry = false) {
     const settings = getAiSettings();
     
     if (!settings.apiKey) {
@@ -154,12 +173,16 @@ async function reviewWithAI(text, callback) {
 
     const preference = settings.model.toLowerCase().includes("pro") ? "pro" : "flash";
     
-    let modelPath;
-    try {
-        modelPath = await discoverModel(settings.apiKey, preference);
-    } catch (e) {
-        callback({ error: "사용 가능한 AI 모델을 탐색하지 못했습니다: " + e.message });
-        return;
+    let modelPath = localStorage.getItem(\`gemini_resolved_\${preference}\`);
+    
+    // 캐시된 모델이 없거나, 캐시된 모델이 실패해서 재시도(isRetry)하는 경우 탐색 실행
+    if (!modelPath || isRetry) {
+        try {
+            modelPath = await discoverModel(settings.apiKey, preference);
+        } catch (e) {
+            callback({ error: "사용 가능한 AI 모델을 탐색하지 못했습니다: " + e.message });
+            return;
+        }
     }
 
     const url = `${AI_API_URL_BASE}${modelPath}:generateContent?key=${settings.apiKey}`;
@@ -190,7 +213,18 @@ async function reviewWithAI(text, callback) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || "API 통신 오류");
+            const errorMsg = errorData.error?.message || "API 통신 오류";
+            
+            // 만약 현재 캐시된 모델이 더 이상 유효하지 않다는(400, 403, 404) 에러면 캐시를 지우고 재시도
+            if (!isRetry && (response.status === 404 || response.status === 403 || response.status === 400 || errorMsg.includes("not found") || errorMsg.includes("no longer available"))) {
+                console.warn(\`[AI 모델 캐시 만료 감지] 기존 모델(\${modelPath})이 막혔습니다. 재탐색을 시작합니다.\`);
+                localStorage.removeItem(\`gemini_resolved_\${preference}\`);
+                discoveredModelsCache[preference] = "";
+                // 1회에 한해 다시 탐색 및 실행
+                return reviewWithAI(text, callback, true);
+            }
+            
+            throw new Error(errorMsg);
         }
 
         const data = await response.json();
