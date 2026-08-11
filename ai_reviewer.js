@@ -44,7 +44,7 @@ async function reviewWithAI(text, callback) {
         return;
     }
 
-    let safeModelName = settings.model.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+    let safeModelName = settings.model.trim().toLowerCase().replace(/[^a-z0-9-.]/g, '-').replace(/-+/g, '-');
     // 복구 및 2.5 버전 강제 업그레이드 로직
     safeModelName = safeModelName.replace(/gemini-1-5/g, 'gemini-2.5');
     safeModelName = safeModelName.replace(/gemini-1\.5/g, 'gemini-2.5');
