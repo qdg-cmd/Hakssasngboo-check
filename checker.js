@@ -77,13 +77,19 @@ function checkData() {
         const hasNumber = /\d/.test(studentNum);
         
         // 페이지가 넘어갈 때 반복해서 출력되는 표 머리글이나 꼬리말(페이지 번호) 무시
-        const isHeaderJunk = studentName === "성명" || studentName === "이름" || studentName === "학생명" || 
-                             (cellText && (cellText.includes("학교생활기록부") || cellText.includes("검사 내용") || cellText === "내용"));
-        const isPageNumber = cellText && cellText.trim().match(/^-\s*\d+\s*-$/);
+        const cleanStudentName = studentName.replace(/\s/g, '');
+        const cleanCellText = cellText ? cellText.replace(/\s/g, '') : '';
+        
+        const isHeaderJunk = cleanStudentName === "성명" || cleanStudentName === "이름" || cleanStudentName === "학생명" || 
+                             (cellText && (cleanCellText.includes("학교생활기록부") || cleanCellText.includes("검사내용") || cleanCellText === "내용" || cleanCellText === "세부능력및특기사항" || cleanCellText.includes("행동특성및종합의견")));
+        const isPageNumber = cellText && (
+            cellText.trim().match(/^-\s*\d+\s*-$/) || 
+            cellText.trim().match(/\d+\s*\/\s*\d+/)
+        );
         
         if (isHeaderJunk || isPageNumber) return;
 
-        // 새로운 학생 시작
+        // 새로운 학생 시작 또는 이름이 다시 적힌 연장선 처리
         if (studentName && hasNumber) {
             let displayId = "";
             if (tabType === 'subject-single') {
@@ -95,13 +101,23 @@ function checkData() {
                 }
             }
             
-            lastValidStudent = {
-                displayId: displayId,
-                cellText: cellText || ""
-            };
-            parsedStudents.push(lastValidStudent);
+            // 만약 방금 추출한 학생 식별자(번호+이름)가 직전에 파싱한 학생과 완전히 똑같다면,
+            // 이는 새로운 학생이 아니라 페이지가 넘어가며 엑셀에 이름이 다시 출력된 '연장선'임!
+            if (lastValidStudent && lastValidStudent.displayId === displayId) {
+                if (cellText) {
+                    // 띄어쓰기 없이 바로 이어붙임
+                    lastValidStudent.cellText += cellText;
+                }
+            } else {
+                // 진짜 새로운 학생인 경우
+                lastValidStudent = {
+                    displayId: displayId,
+                    cellText: cellText || ""
+                };
+                parsedStudents.push(lastValidStudent);
+            }
         } 
-        // 학생 정보는 비어있지만 텍스트가 있는 경우 (페이지 잘림으로 이어지는 문장이거나, 진로활동처럼 한 칸 아래에 적힌 경우)
+        // 학생 정보는 비어있지만 텍스트가 있는 경우 (페이지 잘림으로 이름 칸이 비어있는 병합 셀 연장선)
         else if ((!studentName || !hasNumber) && cellText && lastValidStudent) {
             if (lastValidStudent.cellText) {
                 // 엑셀에서 페이지가 잘릴 때 띄어쓰기 없이 문장 중간이 뚝 끊기므로そのまま 이어붙임
