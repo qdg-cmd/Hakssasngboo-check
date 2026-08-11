@@ -99,7 +99,7 @@ async function testModelAccess(apiKey, modelPath) {
 
 // 자동 모델 탐색 및 실 사용 테스트까지 진행하는 초강력 모델 해결기
 async function discoverModel(apiKey, preference) {
-    const cacheKey = \`gemini_resolved_\${preference}\`;
+    const cacheKey = `gemini_resolved_${preference}`;
     const cachedModel = localStorage.getItem(cacheKey);
     if (cachedModel && discoveredModelsCache[preference] === cachedModel) {
         return cachedModel;
@@ -173,7 +173,7 @@ async function reviewWithAI(text, callback, isRetry = false) {
 
     const preference = settings.model.toLowerCase().includes("pro") ? "pro" : "flash";
     
-    let modelPath = localStorage.getItem(\`gemini_resolved_\${preference}\`);
+    let modelPath = localStorage.getItem(`gemini_resolved_${preference}`);
     
     // 캐시된 모델이 없거나, 캐시된 모델이 실패해서 재시도(isRetry)하는 경우 탐색 실행
     if (!modelPath || isRetry) {
@@ -217,8 +217,8 @@ async function reviewWithAI(text, callback, isRetry = false) {
             
             // 만약 현재 캐시된 모델이 더 이상 유효하지 않다는(400, 403, 404) 에러면 캐시를 지우고 재시도
             if (!isRetry && (response.status === 404 || response.status === 403 || response.status === 400 || errorMsg.includes("not found") || errorMsg.includes("no longer available"))) {
-                console.warn(\`[AI 모델 캐시 만료 감지] 기존 모델(\${modelPath})이 막혔습니다. 재탐색을 시작합니다.\`);
-                localStorage.removeItem(\`gemini_resolved_\${preference}\`);
+                console.warn(`[AI 모델 캐시 만료 감지] 기존 모델(${modelPath})이 막혔습니다. 재탐색을 시작합니다.`);
+                localStorage.removeItem(`gemini_resolved_${preference}`);
                 discoveredModelsCache[preference] = "";
                 // 1회에 한해 다시 탐색 및 실행
                 return reviewWithAI(text, callback, true);
