@@ -328,13 +328,26 @@ function renderResults(results) {
                         });
                     }
                     
-                    // AI 리뷰가 진행되었음을 표시
-                    tr.classList.add('row-error'); 
-                    tr.style.display = '';
+                    // AI 검토 결과에 따른 색상 및 상태 표시 변경
+                    const noErrorsFound = aiData.inspection_result.includes("기재 금지 위반 사항이 발견되지 않았습니다.") || (aiData.problematic_phrases && aiData.problematic_phrases.length === 0);
                     
-                    const statusTd = tr.querySelector('td:nth-child(3)');
-                    if (statusTd && statusTd.textContent.includes('이상 없음')) {
-                        statusTd.innerHTML = '<span class="status-warn">⚠️ AI 검토 완료</span>';
+                    if (noErrorsFound) {
+                        tr.classList.remove('row-error');
+                        tr.classList.add('row-ai-success');
+                        tr.style.display = '';
+                        
+                        const statusTd = tr.querySelector('td:nth-child(3)');
+                        if (statusTd) {
+                            statusTd.innerHTML = '<span class="status-ok">✅ AI 검토 완료<br>(위반 없음)</span>';
+                        }
+                    } else {
+                        tr.classList.add('row-error'); 
+                        tr.style.display = '';
+                        
+                        const statusTd = tr.querySelector('td:nth-child(3)');
+                        if (statusTd && statusTd.textContent.includes('이상 없음')) {
+                            statusTd.innerHTML = '<span class="status-warn">⚠️ AI 검토 완료</span>';
+                        }
                     }
                 });
             });
