@@ -29,7 +29,7 @@ body {
 }
 
 .app-container {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 2rem;
 }
@@ -214,20 +214,20 @@ th, td {
 
 /* 지정된 너비를 줘서 테이블이 뭉개지지 않도록 설정 */
 th:nth-child(1), td:nth-child(1) {
-    width: 15%; /* 학생 정보 */
+    width: 12%; /* 학생 정보 */
     min-width: 100px;
     word-break: keep-all;
 }
 th:nth-child(2), td:nth-child(2) {
-    width: 60%; /* 입력 내용 */
+    width: 45%; /* 입력 내용 */
 }
 th:nth-child(3), td:nth-child(3) {
-    width: 10%; /* 점검 결과 */
+    width: 8%; /* 점검 결과 */
     min-width: 80px;
 }
 th:nth-child(4), td:nth-child(4) {
-    width: 15%; /* 상세 내용 */
-    min-width: 100px;
+    width: 35%; /* 상세 내용 */
+    min-width: 250px;
 }
 
 .row-error {
