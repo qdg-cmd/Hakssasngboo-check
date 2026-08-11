@@ -104,7 +104,14 @@ function checkData() {
         const cleanCellText = cellText ? cellText.replace(/\s/g, '') : '';
         
         const isHeaderJunk = cleanStudentName === "성명" || cleanStudentName === "이름" || cleanStudentName === "학생명" || 
-                             (cellText && (cleanCellText.includes("학교생활기록부") || cleanCellText.includes("검사내용") || cleanCellText === "내용" || cleanCellText === "세부능력및특기사항" || cleanCellText.includes("행동특성및종합의견")));
+                             (cellText && (
+                                 (cleanCellText.includes("학교생활기록부") && cleanCellText.length < 30) || 
+                                 (cleanCellText.includes("검사내용") && cleanCellText.length < 20) || 
+                                 cleanCellText === "내용" || 
+                                 cleanCellText === "특기사항" ||
+                                 cleanCellText === "세부능력및특기사항" || 
+                                 (cleanCellText.includes("행동특성및종합의견") && cleanCellText.length < 20)
+                             ));
         const isPageNumber = cellText && (
             cellText.trim().match(/^-\s*\d+\s*-$/) || 
             cellText.trim().match(/\d+\s*\/\s*\d+/)
