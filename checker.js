@@ -81,6 +81,11 @@ function checkData() {
             studentName = (row[1 + globalOffset] || "").toString().trim();
             extraInfo = (row[3 + globalOffset] || "").toString().trim(); 
             cellText = (row[5 + globalOffset] || "").toString(); 
+
+            // 진로활동의 경우 해당 줄의 F열은 '희망분야' 등의 라벨이므로 무시 (내용은 다음 줄에 있음)
+            if (extraInfo.replace(/\s/g, '').includes("진로활동")) {
+                cellText = "";
+            }
         } else if (tabType === 'subject-single') {
             // 단일과목은 양식이 복잡하여 고정
             studentNum = (row[6] || "").toString().trim(); 
