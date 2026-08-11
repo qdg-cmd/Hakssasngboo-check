@@ -27,13 +27,65 @@ const SYSTEM_PROMPT = `
 function getAiSettings() {
     return {
         apiKey: localStorage.getItem('gemini_api_key') || '',
-        model: localStorage.getItem('gemini_model') || 'gemini-2.5-flash'
+        model: localStorage.getItem('gemini_model') || 'flash'
     };
 }
 
 function saveAiSettings(apiKey, model) {
     localStorage.setItem('gemini_api_key', apiKey);
     localStorage.setItem('gemini_model', model);
+}
+
+let discoveredModelsCache = {
+    flash: "",
+    pro: ""
+};
+
+async function discoverModel(apiKey, preference) {
+    if (discoveredModelsCache[preference]) {
+        return discoveredModelsCache[preference];
+    }
+
+    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+    try {
+        const res = await fetch(listUrl);
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error?.message || "모델 목록을 조회하지 못했습니다.");
+        }
+        const data = await res.json();
+        const models = data.models || [];
+        
+        // generateContent 메소드를 지원하고 이름에 gemini가 들어가는 모델 필터링
+        const validModels = models.filter(m => 
+            m.supportedGenerationMethods && 
+            m.supportedGenerationMethods.includes("generateContent") &&
+            m.name.includes("models/gemini")
+        );
+
+        if (validModels.length === 0) {
+            throw new Error("사용 가능한 Gemini 모델을 찾을 수 없습니다.");
+        }
+
+        // 선호도(flash 또는 pro)가 포함된 모델 검색
+        let matched = validModels.find(m => m.name.toLowerCase().includes(preference));
+        
+        // 없으면 flash가 포함된 모델을 기본값으로 사용
+        if (!matched) {
+            matched = validModels.find(m => m.name.toLowerCase().includes("flash"));
+        }
+        // 그것도 없으면 사용 가능한 가장 첫번째 모델 선택
+        if (!matched) {
+            matched = validModels[0];
+        }
+
+        discoveredModelsCache[preference] = matched.name;
+        return matched.name;
+    } catch (e) {
+        console.error("모델 자동 검색 오류:", e);
+        // 오류 시 기본 하드코딩 모델 반환
+        return preference === "pro" ? "models/gemini-2.5-pro" : "models/gemini-2.5-flash";
+    }
 }
 
 async function reviewWithAI(text, callback) {
@@ -44,13 +96,17 @@ async function reviewWithAI(text, callback) {
         return;
     }
 
-    let safeModelName = settings.model.trim().toLowerCase().replace(/[^a-z0-9-.]/g, '-').replace(/-+/g, '-');
-    // 복구 및 2.5 버전 강제 업그레이드 로직
-    safeModelName = safeModelName.replace(/gemini-1-5/g, 'gemini-2.5');
-    safeModelName = safeModelName.replace(/gemini-1\.5/g, 'gemini-2.5');
-    if (!safeModelName.includes('gemini')) safeModelName = 'gemini-2.5-flash';
+    const preference = settings.model.toLowerCase().includes("pro") ? "pro" : "flash";
+    
+    let modelPath;
+    try {
+        modelPath = await discoverModel(settings.apiKey, preference);
+    } catch (e) {
+        callback({ error: "모델 탐색 실패: " + e.message });
+        return;
+    }
 
-    const url = `${AI_API_URL_BASE}${safeModelName}:generateContent?key=${settings.apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${settings.apiKey}`;
     
     const payload = {
         system_instruction: {
