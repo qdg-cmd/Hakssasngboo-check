@@ -59,8 +59,10 @@ function checkData() {
         }
     }
 
+    let lastRowIndex = -1;
+
     // 1단계: 엑셀 행을 순회하며 학생별로 데이터를 모두 이어붙임 (페이지 잘림, 진로활동 줄바꿈 등 해결)
-    currentExcelData.forEach((row) => {
+    currentExcelData.forEach((row, index) => {
         if (!row || row.length === 0) return;
         
         let studentNum = "";
@@ -81,11 +83,6 @@ function checkData() {
             studentName = (row[1 + globalOffset] || "").toString().trim();
             extraInfo = (row[3 + globalOffset] || "").toString().trim(); 
             cellText = (row[5 + globalOffset] || "").toString(); 
-
-            // 진로활동의 경우 해당 줄의 F열은 '희망분야' 등의 라벨이므로 무시 (내용은 다음 줄에 있음)
-            if (extraInfo.replace(/\s/g, '').includes("진로활동")) {
-                cellText = "";
-            }
         } else if (tabType === 'subject-single') {
             // 단일과목은 양식이 복잡하여 고정
             studentNum = (row[6] || "").toString().trim(); 
@@ -125,26 +122,36 @@ function checkData() {
             // 이는 새로운 학생이 아니라 페이지가 넘어가며 엑셀에 이름이 다시 출력된 '연장선'임!
             if (lastValidStudent && lastValidStudent.displayId === displayId) {
                 if (cellText) {
-                    // 띄어쓰기 없이 바로 이어붙임
-                    lastValidStudent.cellText += cellText;
+                    if (index === lastRowIndex + 1) {
+                        lastValidStudent.cellText += "\n" + cellText;
+                    } else {
+                        lastValidStudent.cellText += cellText;
+                    }
                 }
             } else {
-                // 진짜 새로운 학생인 경우
+                // 새로운 학생 시작
                 lastValidStudent = {
                     displayId: displayId,
                     cellText: cellText || ""
                 };
                 parsedStudents.push(lastValidStudent);
             }
+            lastRowIndex = index;
         } 
         // 학생 정보는 비어있지만 텍스트가 있는 경우 (페이지 잘림으로 이름 칸이 비어있는 병합 셀 연장선)
         else if ((!studentName || !hasNumber) && cellText && lastValidStudent) {
             if (lastValidStudent.cellText) {
-                // 엑셀에서 페이지가 잘릴 때 띄어쓰기 없이 문장 중간이 뚝 끊기므로そのまま 이어붙임
-                lastValidStudent.cellText += cellText;
+                // 엑셀에서 페이지가 잘릴 때 띄어쓰기 없이 문장 중간이 뚝 끊기므로 그대로 이어붙임
+                // 단, 바로 다음 줄(인덱스 차이 1)인 경우는 진로활동의 2번째 줄이거나 구조적인 줄바꿈이므로 개행(\n)으로 이어붙임
+                if (index === lastRowIndex + 1) {
+                    lastValidStudent.cellText += "\n" + cellText;
+                } else {
+                    lastValidStudent.cellText += cellText;
+                }
             } else {
                 lastValidStudent.cellText = cellText;
             }
+            lastRowIndex = index;
         }
     });
 
