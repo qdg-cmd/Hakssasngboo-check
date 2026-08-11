@@ -83,7 +83,14 @@ function checkData() {
             studentNum = (row[0] || "").toString().trim();
             studentName = (row[1] || "").toString().trim();
             extraInfo = (row[3] || "").toString().trim(); // D열 (영역)
-            cellText = (row[5] || "").toString(); // F열
+            
+            // 나이스 엑셀 병합 문제: 진로활동은 바로 아랫줄(행)의 F열에 내용이 들어감
+            if (extraInfo.includes("진로활동")) {
+                const nextRow = currentExcelData[rowIndex + 1];
+                cellText = nextRow ? (nextRow[5] || "").toString() : "";
+            } else {
+                cellText = (row[5] || "").toString(); // F열
+            }
         } else if (tabType === 'subject-single') {
             studentNum = (row[6] || "").toString().trim(); // 반/번호
             studentName = (row[7] || "").toString().trim();
