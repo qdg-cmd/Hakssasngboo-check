@@ -42,33 +42,16 @@ function checkData() {
     const expandedKeywords = getExpandedKeywords();
     
     currentResults = [];
+    let parsedStudents = [];
+    let lastValidStudent = null;
 
-    // 탭별로 확인할 열 인덱스 설정 (A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9)
-    // - 행동발달: 성명 B(1), 내용 D(3)
-    // - 교과세특: 성명 B(1), 내용 C(2)
-    // - 창체: 성명 B(1), 내용 F(5)
-    // - 단일과목: 성명 H(7), 내용 J(9), 학년 C(2), 반/번호 G(6)
-    
-    let nameColIdx = 1; // 기본 성명 열
-    let contentColIdx = 3; // 기본 내용 열
-
-    if (tabType === 'behavior') {
-        contentColIdx = 3; // D열
-    } else if (tabType === 'subject') {
-        contentColIdx = 2; // C열
-    } else if (tabType === 'creative') {
-        contentColIdx = 5; // F열
-    } else if (tabType === 'subject-single') {
-        nameColIdx = 7; // H열
-        contentColIdx = 9; // J열
-    }
-
-    currentExcelData.forEach((row, rowIndex) => {
+    // 1단계: 엑셀 행을 순회하며 학생별로 데이터를 모두 이어붙임 (페이지 잘림, 진로활동 줄바꿈 등 해결)
+    currentExcelData.forEach((row) => {
         if (!row || row.length === 0) return;
         
         let studentNum = "";
         let studentName = "";
-        let extraInfo = ""; // 창체: 영역, 단일과목: 학년
+        let extraInfo = ""; 
         let cellText = "";
 
         if (tabType === 'behavior') {
@@ -78,56 +61,69 @@ function checkData() {
         } else if (tabType === 'subject') {
             studentNum = (row[0] || "").toString().trim();
             studentName = (row[1] || "").toString().trim();
-            cellText = (row[3] || "").toString(); // D열
+            cellText = (row[3] || "").toString(); 
         } else if (tabType === 'creative') {
             studentNum = (row[0] || "").toString().trim();
             studentName = (row[1] || "").toString().trim();
-            extraInfo = (row[3] || "").toString().trim(); // D열 (영역)
-            
-            // 나이스 엑셀 병합 문제: 진로활동은 바로 아랫줄(행)의 F열에 내용이 들어감
-            if (extraInfo.includes("진로활동")) {
-                const nextRow = currentExcelData[rowIndex + 1];
-                cellText = nextRow ? (nextRow[5] || "").toString() : "";
-            } else {
-                cellText = (row[5] || "").toString(); // F열
-            }
+            extraInfo = (row[3] || "").toString().trim(); 
+            cellText = (row[5] || "").toString(); 
         } else if (tabType === 'subject-single') {
-            studentNum = (row[6] || "").toString().trim(); // 반/번호
+            studentNum = (row[6] || "").toString().trim(); 
             studentName = (row[7] || "").toString().trim();
-            extraInfo = (row[2] || "").toString().trim(); // 학년
+            extraInfo = (row[2] || "").toString().trim(); 
             cellText = (row[9] || "").toString();
         }
 
-        // 헤더 행 등 쓸데없는 데이터 걸러내기 (번호에 숫자가 포함되어 있어야만 정상적인 데이터로 간주)
         const hasNumber = /\d/.test(studentNum);
         
-        const isJunk = !studentName || 
-                       studentName === "성명" || studentName === "이름" || studentName === "학생명" ||
-                       !hasNumber;
-        if (isJunk || !cellText) return;
+        // 페이지가 넘어갈 때 반복해서 출력되는 표 머리글이나 꼬리말(페이지 번호) 무시
+        const isHeaderJunk = studentName === "성명" || studentName === "이름" || studentName === "학생명" || 
+                             (cellText && (cellText.includes("학교생활기록부") || cellText.includes("검사 내용") || cellText === "내용"));
+        const isPageNumber = cellText && cellText.trim().match(/^-\s*\d+\s*-$/);
+        
+        if (isHeaderJunk || isPageNumber) return;
 
-        // 화면 및 엑셀에 예쁘게 표시할 식별 정보 만들기
-        let displayId = "";
-        if (tabType === 'subject-single') {
-            displayId = `[${extraInfo}학년 ${studentNum}] ${studentName}`;
-        } else {
-            displayId = studentNum ? `[${studentNum}번] ${studentName}` : studentName;
-            if (tabType === 'creative' && extraInfo) {
-                displayId += ` (${extraInfo})`;
+        // 새로운 학생 시작
+        if (studentName && hasNumber) {
+            let displayId = "";
+            if (tabType === 'subject-single') {
+                displayId = `[${extraInfo}학년 ${studentNum}] ${studentName}`;
+            } else {
+                displayId = studentNum ? `[${studentNum}번] ${studentName}` : studentName;
+                if (tabType === 'creative' && extraInfo) {
+                    displayId += ` (${extraInfo})`;
+                }
+            }
+            
+            lastValidStudent = {
+                displayId: displayId,
+                cellText: cellText || ""
+            };
+            parsedStudents.push(lastValidStudent);
+        } 
+        // 학생 정보는 비어있지만 텍스트가 있는 경우 (페이지 잘림으로 이어지는 문장이거나, 진로활동처럼 한 칸 아래에 적힌 경우)
+        else if ((!studentName || !hasNumber) && cellText && lastValidStudent) {
+            if (lastValidStudent.cellText) {
+                // 엑셀에서 페이지가 잘릴 때 띄어쓰기 없이 문장 중간이 뚝 끊기므로そのまま 이어붙임
+                lastValidStudent.cellText += cellText;
+            } else {
+                lastValidStudent.cellText = cellText;
             }
         }
-        
-        let hasErrorInRow = false;
-        
-        // 엑셀 내보내기 시 깔끔하게 보일 원본 데이터 재구성
+    });
+
+    // 2단계: 완벽하게 하나로 합쳐진 텍스트를 대상으로 금지어 및 공백 오류 검사 수행
+    parsedStudents.forEach(student => {
+        if (!student.cellText) return; // 내용이 아예 없는 경우는 건너뜀
+
         let originalData = {
-            "식별/이름": displayId,
-            "입력 내용": cellText
+            "식별/이름": student.displayId,
+            "입력 내용": student.cellText
         };
 
         let rowResult = {
-            studentName: displayId,
-            cellText: cellText,
+            studentName: student.displayId,
+            cellText: student.cellText,
             originalData: originalData,
             errors: []
         };
@@ -135,16 +131,16 @@ function checkData() {
         // 1. Keyword check
         let foundKeywords = [];
         expandedKeywords.forEach(kw => {
-            if (cellText.includes(kw)) {
+            if (student.cellText.includes(kw)) {
                 foundKeywords.push(kw);
             }
         });
         
         // 2. Space check
-        const isStartSpace = cellText.startsWith(" ");
-        const isEndSpace = cellText.endsWith(" ");
-        const doubleSpaceMatch = cellText.match(/([가-힣a-zA-Z0-9]+)\s{2,}([가-힣a-zA-Z0-9]+)/);
-        const hasDoubleSpace = /\s{2,}/.test(cellText);
+        const isStartSpace = student.cellText.startsWith(" ");
+        const isEndSpace = student.cellText.endsWith(" ");
+        const doubleSpaceMatch = student.cellText.match(/([가-힣a-zA-Z0-9]+)\s{2,}([가-힣a-zA-Z0-9]+)/);
+        const hasDoubleSpace = /\s{2,}/.test(student.cellText);
         
         let spaceMsgs = [];
         if (isStartSpace) spaceMsgs.push("시작 공백");
